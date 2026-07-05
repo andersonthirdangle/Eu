@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1a1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MOSB Horas">
+<meta name="description" content="Controle pessoal de jornada, banco de horas, horas extras e adicional noturno.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>MOSB · Controle de Horas</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#0f0f0f;color:#e5e5e5;font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding-bottom:60px;min-height:100vh}
+.header{background:#1a1a1a;border-bottom:1px solid #2a2a2a;padding:12px 16px;position:sticky;top:0;z-index:100}
+.header-row{display:flex;justify-content:space-between;align-items:center}
+.header-title{font-size:13px;font-weight:700}
+.header-sub{font-size:10px;color:#737373;margin-top:2px}
+.saving{font-size:10px;color:#404040}
+
+/* AVATAR */
+.avatar{width:38px;height:38px;border-radius:50%;background:#2a2a2a;border:1px solid #404040;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;position:relative}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar span{font-size:14px;font-weight:700;color:#a3a3a3}
+.avatar-badge{position:absolute;bottom:-2px;right:-2px;background:#1a1a1a;border:1px solid #404040;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;font-size:8px}
+.perfil-row{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.avatar-lg{width:64px;height:64px;border-radius:50%;background:#2a2a2a;border:1px solid #404040;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;position:relative}
+.avatar-lg img{width:100%;height:100%;object-fit:cover}
+.avatar-lg span{font-size:22px;font-weight:700;color:#a3a3a3}
+.link-btn{background:none;border:none;color:#93c5fd;font-size:11px;cursor:pointer;padding:0;text-decoration:underline}
+.link-btn.danger{color:#fca5a5}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;background:#1a1a1a;border-top:1px solid #2a2a2a;display:flex;z-index:100}
+.nav-btn{flex:1;padding:10px 0 8px;background:none;border:none;color:#737373;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+.nav-btn.active{color:#fcd34d}
+.nav-icon{font-size:18px;line-height:1}
+
+/* ABAS INTERNAS */
+.tabs{display:flex;background:#1a1a1a;border-bottom:1px solid #2a2a2a}
+.tab{flex:1;padding:10px 0;background:none;border:none;border-bottom:2px solid transparent;color:#737373;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer}
+.tab.active{color:#fcd34d;border-bottom-color:#fcd34d}
+
+.content{padding:12px}
+
+/* TOTAIS */
+.total-card{background:#1c1917;border:1px solid #3d3010;border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.total-label{font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:0.06em}
+.total-value{font-size:22px;font-weight:700;color:#fcd34d;font-family:monospace}
+.stat-row{display:flex;gap:8px;margin-bottom:8px}
+.stat-card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:10px 12px;flex:1;min-width:0}
+.stat-card.blue{background:#1e3a5f}
+.stat-card.green{background:#14532d}
+.stat-card.amber{background:#1c1917}
+.stat-card.red{background:#450a0a}
+.stat-card.cyan{background:#0c2a2a}
+.stat-label{font-size:10px;color:#737373;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px}
+.stat-val{font-size:14px;font-weight:700;font-family:monospace}
+.stat-val.blue{color:#93c5fd}
+.stat-val.green{color:#86efac}
+.stat-val.amber{color:#fcd34d}
+.stat-val.red{color:#fca5a5}
+.stat-val.cyan{color:#67e8f9}
+.stat-val.muted{color:#737373}
+
+/* BARRA DE COMPOSICAO */
+.comp-bar-wrap{margin:10px 0 4px}
+.comp-bar{height:8px;border-radius:4px;display:flex;overflow:hidden;gap:1px}
+.comp-seg{height:100%;transition:width 0.3s}
+.comp-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.comp-leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#737373}
+.comp-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+/* FORMULARIO */
+.form-card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:14px;margin-bottom:12px}
+.form-title{font-size:11px;font-weight:700;color:#737373;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+.form-group{margin-bottom:8px}
+label{font-size:10px;color:#737373;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;display:block}
+input[type=date],input[type=time],input[type=text],input[type=number],select{background:#141414;border:1px solid #2a2a2a;border-radius:6px;color:#86efac;padding:8px 10px;font-size:13px;font-family:monospace;width:100%;outline:none;-webkit-appearance:none}
+select.param-input{color:#e5e5e5;font-family:Arial,sans-serif}
+input[type=text],input.obs{color:#737373}
+input.saldo-input{color:#93c5fd;font-size:16px;font-weight:700}
+input.param-input{color:#e5e5e5}
+.btn-add{width:100%;padding:11px 0;background:#14532d;border:1px solid #166534;border-radius:6px;color:#86efac;font-weight:700;font-size:13px;cursor:pointer}
+.btn-add:active{opacity:0.8}
+
+/* CICLO ATUAL */
+.ciclo-label{font-size:10px;color:#737373;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px}
+.ciclo-periodo{font-size:12px;color:#fcd34d;font-family:monospace;margin-bottom:12px}
+
+/* LISTA DIAS */
+.list-header{font-size:10px;color:#737373;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
+.empty{text-align:center;padding:30px 0;color:#404040;font-size:13px}
+.day-card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;margin-bottom:8px;overflow:hidden}
+.day-header{padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
+.day-date{font-family:monospace;font-size:13px;font-weight:700}
+.day-badges{display:flex;align-items:center;gap:6px}
+.btn-remove{background:none;border:none;color:#404040;font-size:20px;cursor:pointer;padding:0 4px;line-height:1}
+.btn-edit{background:none;border:none;color:#737373;font-size:15px;cursor:pointer;padding:0 4px;line-height:1}
+.btn-cancel{padding:11px 16px;background:#2a2a2a;border:1px solid #404040;border-radius:6px;color:#a3a3a3;font-weight:700;font-size:13px;cursor:pointer}
+.editing{border-color:#3d5a80!important;box-shadow:0 0 0 1px #3d5a80}
+.day-body{padding:0 12px 10px;border-top:1px solid #2a2a2a}
+.badges-row{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.badge{border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;letter-spacing:0.03em;white-space:nowrap}
+.badge-muted{background:#222;color:#737373}
+.badge-cyan{background:#0c1f2e;color:#67e8f9}
+.badge-green{background:#14532d;color:#86efac}
+.badge-red{background:#450a0a;color:#fca5a5}
+.badge-blue{background:#1e3a5f;color:#93c5fd}
+.badge-amber{background:#1c1917;color:#fcd34d}
+.badge-purple{background:#2e1065;color:#c4b5fd}
+.day-obs{margin-top:6px;font-size:11px;color:#737373;font-style:italic}
+.day-folga{padding:6px 12px 10px;font-size:11px;color:#404040}
+
+/* HISTORICO */
+.hist-mes{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:10px;overflow:hidden}
+.hist-mes-header{padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.hist-mes-nome{font-size:14px;font-weight:700;color:#e5e5e5}
+.hist-mes-total{font-size:14px;font-weight:700;color:#fcd34d;font-family:monospace}
+.hist-mes-body{padding:0 14px 12px;border-top:1px solid #2a2a2a;display:none}
+.hist-mes-body.open{display:block}
+.hist-stats{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.hist-stat{background:#222;border-radius:6px;padding:6px 10px;flex:1;min-width:80px}
+.hist-stat-label{font-size:9px;color:#737373;text-transform:uppercase;margin-bottom:2px}
+.hist-stat-val{font-size:12px;font-weight:700;font-family:monospace}
+.hist-edit-btn{margin-top:10px;width:100%;padding:8px 0;background:#1e3a5f;border:1px solid #1d4ed8;border-radius:6px;color:#93c5fd;font-size:12px;font-weight:700;cursor:pointer}
+
+/* MODAL EDITAR MES */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:none;justify-content:center;align-items:flex-start;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+.modal-header{padding:14px 16px;border-bottom:1px solid #2a2a2a;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#1a1a1a;z-index:10}
+.modal-title{font-size:14px;font-weight:700}
+.modal-close{background:none;border:none;color:#737373;font-size:22px;cursor:pointer;line-height:1}
+.modal-body{padding:14px}
+
+/* PARAMS */
+.param-section{background:#1e3a5f;border:1px solid #1d4ed8;border-radius:10px;padding:14px;margin-bottom:14px}
+.param-note{font-size:10px;color:#737373;margin-top:6px}
+.calc-box{background:#1a1a1a;border-radius:8px;border:1px solid #2a2a2a;padding:12px;margin-top:6px}
+.calc-row{display:flex;justify-content:space-between;margin-bottom:4px}
+.calc-label{font-size:12px;color:#737373}
+.calc-val{font-size:12px;color:#86efac;font-family:monospace}
+
+.section-gap{margin-bottom:14px}
+.divider{height:1px;background:#2a2a2a;margin:12px 0}
+
+/* TOGGLE LISTA/CALENDARIO */
+.view-toggle{display:flex;gap:8px;margin-bottom:10px}
+.view-toggle-btn{flex:1;padding:8px 0;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;color:#737373;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;cursor:pointer}
+.view-toggle-btn.active{background:#1e3a5f;border-color:#1d4ed8;color:#93c5fd}
+
+/* CALENDARIO */
+.cal-wrap{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:12px;margin-bottom:10px}
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.cal-nav-btn{background:none;border:none;color:#93c5fd;font-size:15px;cursor:pointer;padding:4px 10px}
+.cal-mes-nome{font-size:13px;font-weight:700;color:#e5e5e5;text-transform:capitalize}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-weekday{font-size:9px;color:#525252;text-align:center;text-transform:uppercase;font-weight:700;padding-bottom:2px}
+.cal-cell{aspect-ratio:1;border-radius:6px;background:#141414;border:1px solid #232323;display:flex;align-items:flex-start;justify-content:flex-start;padding:3px 4px;cursor:pointer;position:relative}
+.cal-cell.empty{background:none;border:none;cursor:default}
+.cal-num{font-size:10px;color:#737373;font-weight:700}
+.cal-hoje{box-shadow:0 0 0 2px #fcd34d inset}
+.cal-green{background:#14532d;border-color:#166534}
+.cal-green .cal-num{color:#86efac}
+.cal-green-he{background:#166534;border-color:#22c55e}
+.cal-green-he .cal-num{color:#bbf7d0}
+.cal-red{background:#450a0a;border-color:#7f1d1d}
+.cal-red .cal-num{color:#fca5a5}
+.cal-purple{background:#2e1065;border-color:#5b21b6}
+.cal-purple .cal-num{color:#c4b5fd}
+.cal-obs{background:#1c1917;border-color:#3d3010}
+.cal-obs .cal-num{color:#fcd34d}
+.cal-dom-vazio{background:#1a1010;border-color:#2a1a1a}
+.cal-sab-vazio{background:#1a1710;border-color:#2a2515}
+.cal-tag{position:absolute;bottom:2px;right:3px;font-size:7px;color:#fcd34d}
+.cal-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.cal-hint{font-size:10px;color:#525252;margin-top:8px;text-align:center}
+
+/* INSTALL PROMPT */
+.install-banner{display:none;background:#1e3a5f;border:1px solid #1d4ed8;border-radius:10px;padding:12px 14px;margin:0 12px 10px;align-items:center;justify-content:space-between;gap:10px}
+.install-banner.show{display:flex}
+.install-text{font-size:12px;color:#93c5fd;line-height:1.4}
+.install-btn{background:#fcd34d;border:none;border-radius:6px;color:#1a1a1a;font-weight:700;font-size:12px;padding:8px 14px;cursor:pointer;white-space:nowrap}
+.install-close{background:none;border:none;color:#737373;font-size:16px;cursor:pointer;padding:0 4px}
+.update-banner{display:none;background:#1c1917;border:1px solid #3d3010;border-radius:10px;padding:12px 14px;margin:0 12px 10px;align-items:center;justify-content:space-between;gap:10px}
+.update-banner.show{display:flex}
+.update-text{font-size:12px;color:#fcd34d}
+.update-btn{background:#fcd34d;border:none;border-radius:6px;color:#1a1a1a;font-weight:700;font-size:12px;padding:8px 14px;cursor:pointer;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-row">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="avatar" id="avatar-header" onclick="document.getElementById('foto-input').click()">
+        <img id="avatar-img-header" style="display:none">
+        <span id="avatar-fallback-header">A</span>
+        <span class="avatar-badge">✏️</span>
+      </div>
+      <div>
+        <div class="header-title">MOSB · Controle de Horas</div>
+        <div class="header-sub" id="header-sub-text">Anderson · Inspetor de Qualidade B</div>
+      </div>
+    </div>
+    <span class="saving" id="saving-indicator"></span>
+  </div>
+</div>
+<input type="file" accept="image/*" id="foto-input" style="display:none" onchange="handleFotoChange(this.files[0])">
+<input type="file" accept="application/json,.json" id="backup-input" style="display:none" onchange="importarBackupChange(this.files[0])">
+
+<!-- BANNER INSTALAR APP -->
+<div class="install-banner" id="install-banner">
+  <span class="install-text">📲 Instale o MOSB Horas na tela inicial para usar offline e mais rápido.</span>
+  <div style="display:flex;gap:6px;align-items:center">
+    <button class="install-btn" onclick="instalarApp()">Instalar</button>
+    <button class="install-close" onclick="fecharInstallBanner()">×</button>
+  </div>
+</div>
+
+<!-- BANNER NOVA VERSAO DISPONIVEL -->
+<div class="update-banner" id="update-banner">
+  <span class="update-text">🔄 Nova versão disponível.</span>
+  <button class="update-btn" onclick="atualizarApp()">Atualizar</button>
+</div>
+
+<!-- PAGINAS -->
+<div id="pg-registro" style="display:none"></div>
+<div id="pg-historico" style="display:none"></div>
+<div id="pg-parametros" style="display:none"></div>
+
+<!-- MODAL EDITAR MES -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Editar Mês</span>
+      <button class="modal-close" onclick="fecharModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nav-registro" onclick="setPage('registro')">
+    <span class="nav-icon">📋</span>Registro
+  </button>
+  <button class="nav-btn" id="nav-historico" onclick="setPage('historico')">
+    <span class="nav-icon">📊</span>Histórico
+  </button>
+  <button class="nav-btn" id="nav-parametros" onclick="setPage('parametros')">
+    <span class="nav-icon">⚙️</span>Parâmetros
+  </button>
+</div>
+
+<script>
+// ── ESTADO ─────────────────────────────────────────────────────────
+let params = {
+  perfilNome:"Anderson", perfilCargo:"Inspetor de Qualidade B",
+  salarioBase:2903.00, jornadaMensal:220, bancoHoras:18,
+  adicionalNoturno:0.35, heUtil:0.50, heDomingo:1.00,
+  ajudaCusto:50.21, toleranciaMin:5,
+  entradaDU:"14:40", saidaDU:"23:28",
+  entradaSAB:"10:40", saidaSAB:"19:40",
+  inicioNoturno:"22:00",
+  sabadoReferencia:"",
+  temAdicionalNoturno:true,
+  descansoMinimoMin:660
+};
+
+// ciclos = { "Jun/2026": { dias:[], saldoInicial:X }, ... }
+// cicloAtual = { dias:[], saldoInicial:X, nome:"Jul/2026" }
+let ciclos = {};
+let cicloAtual = {
+  nome: "",
+  saldoInicial: -1.75,
+  dias: [
+    {id:1,data:"2026-06-22",entrada:"14:40",saida:"00:14",obs:""},
+    {id:2,data:"2026-06-23",entrada:"14:40",saida:"01:38",obs:""},
+    {id:3,data:"2026-06-24",entrada:"",saida:"",obs:"Feriado"},
+    {id:4,data:"2026-06-25",entrada:"14:40",saida:"01:10",obs:""},
+    {id:5,data:"2026-06-26",entrada:"14:40",saida:"01:27",obs:""},
+    {id:6,data:"2026-06-27",entrada:"",saida:"",obs:"Sábado folga"},
+    {id:7,data:"2026-06-28",entrada:"",saida:"",obs:"Domingo"},
+    {id:8,data:"2026-06-29",entrada:"16:25",saida:"23:56",obs:"Jogo do Brasil"},
+    {id:9,data:"2026-06-30",entrada:"12:59",saida:"23:58",obs:""},
+    {id:10,data:"2026-07-01",entrada:"13:00",saida:"23:55",obs:""},
+    {id:11,data:"2026-07-02",entrada:"13:01",saida:"23:50",obs:""},
+  ]
+};
+
+// ── UTILS ──────────────────────────────────────────────────────────
+const toMin = h => { if(!h)return null; const[a,b]=h.split(":").map(Number); return a*60+b; };
+const toHHMM = m => {
+  if(m===null||m===undefined)return"--:--";
+  const a=Math.abs(m),h=Math.floor(a/60),mm=Math.round(a%60);
+  return(m<0?"-":"")+String(h).padStart(2,"0")+":"+String(mm).padStart(2,"0");
+};
+const brl = v => v==null?"R$ --":v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const DIAS_SEM = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+const MESES_NOME = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const diaSem = d => { if(!d)return""; const[y,m,dd]=d.split("-").map(Number); return DIAS_SEM[new Date(y,m-1,dd).getDay()]; };
+const isDom = d => { if(!d)return false; const[y,m,dd]=d.split("-").map(Number); return new Date(y,m-1,dd).getDay()===0; };
+const isSab = d => { if(!d)return false; const[y,m,dd]=d.split("-").map(Number); return new Date(y,m-1,dd).getDay()===6; };
+
+// Detecção automática de sábado alternado: a partir de UM sábado de referência
+// conhecido como "da escala", calcula por diferença de semanas (padrão par/ímpar)
+// se qualquer outro sábado também é da escala ou não.
+const isSabadoEscala = d => {
+  if(!d)return true;
+  const ref=params.sabadoReferencia;
+  if(!ref)return true; // sem referência configurada: comportamento antigo (todo sábado = escala)
+  const[ry,rm,rd]=ref.split("-").map(Number);
+  const[y,m,dd]=d.split("-").map(Number);
+  const refDate=new Date(ry,rm-1,rd);
+  const dt=new Date(y,m-1,dd);
+  const diffDias=Math.round((dt-refDate)/86400000);
+  const diffSemanas=diffDias/7;
+  if(Math.abs(diffSemanas-Math.round(diffSemanas))>0.01)return true; // não bate certo com semanas: fallback seguro
+  return Math.round(diffSemanas)%2===0;
+};
+
+// Retorna "Jun/2026" para uma data do ciclo (ciclo começa dia 21)
+const nomeCiclo = dataStr => {
+  if(!dataStr)return"";
+  const[y,m,d]=dataStr.split("-").map(Number);
+  // dia < 21 pertence ao ciclo do mês anterior
+  if(d<21){ const mm=m-1||12, yy=m===1?y-1:y; return MESES_NOME[mm-1]+"/"+yy; }
+  return MESES_NOME[m-1]+"/"+y;
+};
+
+const applyTol = (horaStr, contratualStr, tol) => {
+  if(!horaStr)return null;
+  const m=toMin(horaStr),c=toMin(contratualStr);
+  return Math.abs(m-c)<=tol?c:m;
+};
+
+const calcDia = (dia) => {
+  const{data,entrada,saida}=dia;
+  if(!data||!entrada||!saida)return null;
+  const dom=isDom(data),sab=isSab(data),tol=params.toleranciaMin;
+  const sabEscala=sab?isSabadoEscala(data):true;
+  const cem=dom||(sab&&!sabEscala); // conta tudo como HE 100%, não passa pelo banco
+  let entMin,saiMin;
+  if(cem){entMin=toMin(entrada);saiMin=toMin(saida);}
+  else if(sab){entMin=applyTol(entrada,params.entradaSAB,tol);saiMin=applyTol(saida,params.saidaSAB,tol);}
+  else{entMin=applyTol(entrada,params.entradaDU,tol);saiMin=applyTol(saida,params.saidaDU,tol);}
+  if(entMin===null||saiMin===null)return null;
+  let totalMin=saiMin-entMin; if(totalMin<0)totalMin+=1440;
+  if(!cem)totalMin-=60;
+  let espMin;
+  if(cem)espMin=0;
+  else if(sab)espMin=toMin(params.saidaSAB)-toMin(params.entradaSAB)-60;
+  else espMin=toMin(params.saidaDU)-toMin(params.entradaDU)-60;
+  const difMin=totalMin-espMin;
+  let notMin=0;
+  if(!cem&&params.temAdicionalNoturno){
+    const ns=toMin(params.inicioNoturno);
+    if(saiMin>=ns)notMin=saiMin-ns;
+    else if(saiMin<entMin)notMin=(1440-ns)+saiMin;
+  }
+  // Alerta de jornada suspeita (provável erro de digitação no horário)
+  let alertaHorario=null;
+  if(totalMin<60)alertaHorario="curta";
+  else if(totalMin>960)alertaHorario="longa";
+  return{totalMin,espMin,difMin,notMin,dom,sab,sabEscala,cem,alertaHorario};
+};
+
+// Timestamp real (ms) de uma data+minutos-do-dia, para comparar descanso entre turnos
+const parseDataHora = (dataStr, minutosDoDia) => {
+  const[y,m,d]=dataStr.split("-").map(Number);
+  return new Date(y,m-1,d,0,0,0,0).getTime()+minutosDoDia*60000;
+};
+
+const calcTodos = (dias, saldoInicial) => {
+  const hv=params.salarioBase/params.jornadaMensal;
+  const hn=hv*(1+params.adicionalNoturno);
+  const he50=hv*(1+params.heUtil);
+  const he100=hv*(1+params.heDomingo);
+  const bancoMin=params.bancoHoras*60;
+  let saldoBruto=saldoInicial*60;
+  let ultimaSaidaTs=null; // controla o descanso entre o fim de um turno e o início do próximo
+  return [...dias].sort((a,b)=>a.data.localeCompare(b.data)).map(dia=>{
+    const calc=calcDia(dia);
+    const saldoAnt=saldoBruto;
+    if(calc&&!calc.cem)saldoBruto+=calc.difMin;
+    const debitoMin=saldoBruto<0?Math.abs(saldoBruto):0;
+    const saldoMin=Math.max(0,saldoBruto);
+    let he50Min=0;
+    if(calc&&!calc.cem&&calc.difMin>0){
+      const excH=Math.max(0,saldoBruto-bancoMin);
+      const excA=Math.max(0,saldoAnt-bancoMin);
+      he50Min=Math.max(0,excH-excA);
+    }
+    const heDomMin=calc&&calc.cem?calc.totalMin:0;
+    const valHE=(he50Min/60)*he50+(heDomMin/60)*he100;
+    const valNot=calc?(calc.notMin/60)*(hn-hv):0;
+
+    // Descanso interjornada (Art. 66 CLT: mínimo 11h entre o fim de um turno e o início do próximo)
+    let alertaDescanso=null;
+    if(dia.entrada&&dia.saida){
+      const entradaMinRaw=toMin(dia.entrada), saidaMinRaw=toMin(dia.saida);
+      const entradaTs=parseDataHora(dia.data,entradaMinRaw);
+      const crossesMidnight=saidaMinRaw<entradaMinRaw;
+      const saidaTs=parseDataHora(dia.data,saidaMinRaw)+(crossesMidnight?86400000:0);
+      if(ultimaSaidaTs!==null){
+        const descansoMin=Math.round((entradaTs-ultimaSaidaTs)/60000);
+        if(descansoMin<params.descansoMinimoMin)alertaDescanso=descansoMin;
+      }
+      ultimaSaidaTs=saidaTs;
+    }
+
+    return{...dia,calc,saldoBruto,debitoMin,saldoMin,he50Min,heDomMin,valHE,valNot,alertaDescanso};
+  });
+};
+
+const totalsCiclo = (diasCalc) => {
+  const totalHE=diasCalc.reduce((s,d)=>s+(d.valHE||0),0);
+  const totalNot=diasCalc.reduce((s,d)=>s+(d.valNot||0),0);
+  const diasTrab=diasCalc.filter(d=>d.entrada&&d.saida).length;
+  const totalAjuda=diasTrab*params.ajudaCusto;
+  const totalEst=params.salarioBase+totalHE+totalNot+totalAjuda;
+  const ultimo=diasCalc[diasCalc.length-1];
+  const saldoAtual=ultimo?ultimo.saldoMin:0;
+  const debitoAtual=ultimo?ultimo.debitoMin:0;
+  const saldoBrutoFinal=ultimo?ultimo.saldoBruto:0;
+  return{totalHE,totalNot,totalAjuda,totalEst,diasTrab,saldoAtual,debitoAtual,saldoBrutoFinal};
+};
+
+// ── STORAGE ────────────────────────────────────────────────────────
+function salvarTudo(){
+  try{
+    localStorage.setItem("mosb_ciclos",JSON.stringify(ciclos));
+    localStorage.setItem("mosb_atual",JSON.stringify(cicloAtual));
+    localStorage.setItem("mosb_params",JSON.stringify(params));
+  }catch(e){}
+  mostrarSaving();
+}
+
+function carregarStorage(){
+  try{
+    const c=localStorage.getItem("mosb_ciclos");
+    if(c)ciclos=JSON.parse(c);
+    const a=localStorage.getItem("mosb_atual");
+    if(a)cicloAtual=JSON.parse(a);
+    const p=localStorage.getItem("mosb_params");
+    if(p)params={...params,...JSON.parse(p)};
+  }catch(e){}
+}
+
+let savingTimer;
+function mostrarSaving(){
+  const el=document.getElementById("saving-indicator");
+  el.textContent="salvando...";
+  clearTimeout(savingTimer);
+  savingTimer=setTimeout(()=>{el.textContent="";},1200);
+}
+
+// ── CICLOS ─────────────────────────────────────────────────────────
+function nomeCicloAtual(){
+  if(cicloAtual.dias.length===0)return"Ciclo Atual";
+  const datas=[...cicloAtual.dias].sort((a,b)=>a.data.localeCompare(b.data));
+  return nomeCiclo(datas[0].data);
+}
+
+// Verifica se dia 21 foi lançado e fecha o ciclo anterior
+function verificarFechamentoCiclo(novoDia){
+  const[y,m,d]=novoDia.data.split("-").map(Number);
+  if(d!==21)return;
+  // Dia 21 = início de novo ciclo, fecha o anterior
+  const nomeCicloFechado=nomeCicloAtual();
+  if(!nomeCicloFechado||nomeCicloFechado==="Ciclo Atual")return;
+  // Calcula saldo final do ciclo atual para passar ao próximo
+  const diasCalc=calcTodos(cicloAtual.dias,cicloAtual.saldoInicial);
+  const tots=totalsCiclo(diasCalc);
+  // Salva ciclo atual no histórico
+  ciclos[nomeCicloFechado]={
+    dias:[...cicloAtual.dias],
+    saldoInicial:cicloAtual.saldoInicial,
+    nome:nomeCicloFechado
+  };
+  // Inicia novo ciclo com saldo herdado
+  const saldoHerdado=tots.saldoBrutoFinal/60;
+  cicloAtual={
+    nome:"",
+    saldoInicial:saldoHerdado,
+    dias:[]
+  };
+}
+
+// ── BADGE ──────────────────────────────────────────────────────────
+const badge=(txt,cls)=>`<span class="badge badge-${cls}">${txt}</span>`;
+
+// ── BARRA DE COMPOSICAO ────────────────────────────────────────────
+function compBar(salario,he,not,ajuda){
+  const total=salario+he+not+ajuda;
+  if(total<=0)return"";
+  const pct=v=>((v/total)*100).toFixed(1);
+  const segs=[
+    {val:salario,color:"#93c5fd",label:"Salário"},
+    {val:ajuda,color:"#fcd34d",label:"Ajuda"},
+    {val:he,color:"#86efac",label:"HE"},
+    {val:not,color:"#67e8f9",label:"Not."},
+  ].filter(s=>s.val>0);
+  const bars=segs.map(s=>`<div class="comp-seg" style="width:${pct(s.val)}%;background:${s.color}"></div>`).join("");
+  const legend=segs.map(s=>`<div class="comp-leg-item"><div class="comp-dot" style="background:${s.color}"></div>${s.label} ${pct(s.val)}%</div>`).join("");
+  return`<div class="comp-bar-wrap"><div class="comp-bar">${bars}</div><div class="comp-legend">${legend}</div></div>`;
+}
+
+// ── RENDER DIA ─────────────────────────────────────────────────────
+function renderDiaCard(dia,onRemove,onEdit,idEditando){
+  const{calc,saldoMin,debitoMin,he50Min,heDomMin,valHE,valNot,alertaDescanso}=dia;
+  const dom=isDom(dia.data),sab=isSab(dia.data);
+  const sabExtra=sab&&!isSabadoEscala(dia.data);
+  const dataFmt=dia.data.split("-").reverse().join("/");
+  const diaBadge=badge(diaSem(dia.data),dom?"purple":sabExtra?"purple":sab?"amber":"muted");
+  const emEdicao=idEditando&&dia.id===idEditando;
+  let bodyHtml="";
+  if(dia.entrada||dia.saida||dia.obs){
+    const b=(...a)=>a.join("");
+    const b1=dia.entrada?badge(dia.entrada,"cyan"):"";
+    const b2=dia.saida?badge("→ "+dia.saida,"cyan"):"";
+    const b3=calc?badge(toHHMM(calc.totalMin)+" trab.","muted"):"";
+    const b4=calc&&calc.difMin!==0?badge((calc.difMin>0?"+":"")+toHHMM(calc.difMin),calc.difMin>0?"green":"red"):"";
+    const b5=calc&&calc.notMin>0?badge(toHHMM(calc.notMin)+" not.","blue"):"";
+    const b6=debitoMin>0?badge("⚠ Débito "+toHHMM(debitoMin),"red"):"";
+    const b7=saldoMin>0&&!debitoMin?badge("Banco "+toHHMM(saldoMin),"cyan"):"";
+    const b8=he50Min>0?badge("HE 50% "+toHHMM(he50Min),"green"):"";
+    const b9=heDomMin>0?badge("HE Dom "+toHHMM(heDomMin),"purple"):"";
+    const b10=valHE>0?badge(brl(valHE),"amber"):"";
+    const b11=valNot>0?badge("Not. "+brl(valNot),"green"):"";
+    const b12=calc&&calc.alertaHorario==="curta"?badge("⚠ Jornada muito curta — confira","red"):"";
+    const b13=calc&&calc.alertaHorario==="longa"?badge("⚠ Jornada muito longa — confira","red"):"";
+    const b14=(alertaDescanso!==null&&alertaDescanso!==undefined)?badge("⚠ Descanso "+toHHMM(alertaDescanso)+" (mín. "+toHHMM(params.descansoMinimoMin)+")","red"):"";
+    const obs=dia.obs?`<div class="day-obs">${dia.obs}</div>`:"";
+    bodyHtml=`<div class="day-body"><div class="badges-row">${b1}${b2}${b3}${b4}${b5}</div><div class="badges-row">${b6}${b7}${b8}${b9}${b10}${b11}</div>${(b12||b13||b14)?`<div class="badges-row">${b12}${b13}${b14}</div>`:""}${obs}</div>`;
+  }else{
+    bodyHtml=`<div class="day-folga">Folga / Sem lançamento${dia.obs?" — "+dia.obs:""}</div>`;
+  }
+  return`<div class="day-card${emEdicao?" editing":""}" id="day-${dia.id}"><div class="day-header"><div class="day-badges"><span class="day-date">${dataFmt}</span>${diaBadge}${(dom||sabExtra)?badge("100%","purple"):""}${sabExtra?badge("Fora escala","red"):""}${emEdicao?badge("✏️ Editando","blue"):""}</div><div>${onEdit?`<button class="btn-edit" onclick="${onEdit}(${dia.id})">✏️</button>`:""}${onRemove?`<button class="btn-remove" onclick="${onRemove}(${dia.id})">×</button>`:""}</div></div>${bodyHtml}</div>`;
+}
+
+// ── PAGINA REGISTRO ────────────────────────────────────────────────
+let viewLancamentos="lista";
+let calAno=null, calMes=null;
+
+function setViewLancamentos(v){
+  viewLancamentos=v;
+  renderRegistro();
+}
+
+function calMesAnterior(){
+  calMes--; if(calMes<0){calMes=11;calAno--;}
+  renderRegistro();
+}
+
+function calMesProximo(){
+  calMes++; if(calMes>11){calMes=0;calAno++;}
+  renderRegistro();
+}
+
+function preencherDataForm(dataStr){
+  if(editandoId!==null){editandoId=null;renderRegistro();}
+  document.getElementById("inp-data").value=dataStr;
+  const ent=document.getElementById("inp-entrada");
+  if(ent)ent.focus();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function renderCalendario(diasCalc){
+  if(calAno===null){const d=new Date();calAno=d.getFullYear();calMes=d.getMonth();}
+  const diasMap={}; diasCalc.forEach(d=>{diasMap[d.data]=d;});
+  const nomesMes=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const hoje=new Date(); const hojeStr=`${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,"0")}-${String(hoje.getDate()).padStart(2,"0")}`;
+  const primeiroDia=new Date(calAno,calMes,1).getDay();
+  const totalDias=new Date(calAno,calMes+1,0).getDate();
+  const semanas=["D","S","T","Q","Q","S","S"];
+
+  let cells=semanas.map(s=>`<div class="cal-weekday">${s}</div>`).join("");
+  for(let i=0;i<primeiroDia;i++)cells+='<div class="cal-cell empty"></div>';
+
+  for(let dia=1;dia<=totalDias;dia++){
+    const dataStr=`${calAno}-${String(calMes+1).padStart(2,"0")}-${String(dia).padStart(2,"0")}`;
+    const dObj=diasMap[dataStr];
+    const dow=new Date(calAno,calMes,dia).getDay();
+    let cls="cal-cell";
+    if(dObj&&dObj.entrada&&dObj.saida){
+      if(dObj.debitoMin>0)cls+=" cal-red";
+      else if(dObj.calc&&dObj.calc.cem)cls+=" cal-purple";
+      else if(dObj.he50Min>0)cls+=" cal-green-he";
+      else cls+=" cal-green";
+    }else if(dObj&&dObj.obs){
+      cls+=" cal-obs";
+    }else if(dow===0){
+      cls+=" cal-dom-vazio";
+    }else if(dow===6){
+      cls+=isSabadoEscala(dataStr)?" cal-sab-vazio":"";
+    }
+    if(dataStr===hojeStr)cls+=" cal-hoje";
+    const onclick=dObj?`editarDiaAtual(${dObj.id})`:`preencherDataForm('${dataStr}')`;
+    const tag=(dObj&&(dObj.valHE>0||dObj.valNot>0))?'<span class="cal-tag">●</span>':"";
+    cells+=`<div class="${cls}" onclick="${onclick}"><span class="cal-num">${dia}</span>${tag}</div>`;
+  }
+
+  return `
+    <div class="cal-wrap">
+      <div class="cal-header">
+        <button class="cal-nav-btn" onclick="calMesAnterior()">◀</button>
+        <span class="cal-mes-nome">${nomesMes[calMes]} ${calAno}</span>
+        <button class="cal-nav-btn" onclick="calMesProximo()">▶</button>
+      </div>
+      <div class="cal-grid">${cells}</div>
+      <div class="cal-legend">
+        <div class="comp-leg-item"><div class="comp-dot" style="background:#166534"></div>Trabalhado</div>
+        <div class="comp-leg-item"><div class="comp-dot" style="background:#22c55e"></div>Gerou HE</div>
+        <div class="comp-leg-item"><div class="comp-dot" style="background:#7f1d1d"></div>Débito</div>
+        <div class="comp-leg-item"><div class="comp-dot" style="background:#5b21b6"></div>Dom/100%</div>
+        <div class="comp-leg-item"><div class="comp-dot" style="background:#3d3010"></div>Obs/Folga</div>
+      </div>
+      <div class="cal-hint">Toque num dia lançado para editar, ou num dia vazio para lançar</div>
+    </div>`;
+}
+
+function renderRegistro(){
+  const diasCalc=calcTodos(cicloAtual.dias,cicloAtual.saldoInicial);
+  const tots=totalsCiclo(diasCalc);
+  const nomeCiclo=nomeCicloAtual();
+
+  // Periodo
+  const datas=[...cicloAtual.dias].filter(d=>d.data).sort((a,b)=>a.data.localeCompare(b.data));
+  let periodo="";
+  if(datas.length>0){
+    const ini=datas[0].data.split("-").reverse().join("/");
+    const fim=datas[datas.length-1].data.split("-").reverse().join("/");
+    periodo=`${ini} → ${fim}`;
+  }
+
+  const comp=compBar(params.salarioBase,tots.totalHE,tots.totalNot,tots.totalAjuda);
+
+  const listaDias=[...diasCalc].reverse().map(d=>renderDiaCard(d,"removerDiaAtual","editarDiaAtual",editandoId)).join("");
+
+  document.getElementById("pg-registro").innerHTML=`
+    <div class="content">
+      <div class="ciclo-label">Ciclo Atual — ${nomeCiclo}</div>
+      ${periodo?`<div class="ciclo-periodo">${periodo}</div>`:"<div style='height:12px'></div>"}
+
+      <div class="total-card"><span class="total-label">Total Estimado</span><span class="total-value">${brl(tots.totalEst)}</span></div>
+      ${comp}
+      <div class="stat-row">
+        <div class="stat-card blue"><div class="stat-label">Salário</div><div class="stat-val blue">${brl(params.salarioBase)}</div></div>
+        <div class="stat-card amber"><div class="stat-label">Ajuda Custo</div><div class="stat-val amber">${brl(tots.totalAjuda)}</div></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-card green"><div class="stat-label">HE</div><div class="stat-val green">${brl(tots.totalHE)}</div></div>
+        ${params.temAdicionalNoturno?`<div class="stat-card green"><div class="stat-label">Ad. Noturno</div><div class="stat-val green">${brl(tots.totalNot)}</div></div>`:""}
+      </div>
+      <div class="stat-row section-gap">
+        <div class="stat-card cyan"><div class="stat-label">Saldo Banco</div><div class="stat-val cyan">${toHHMM(tots.saldoAtual)}</div></div>
+        ${tots.debitoAtual>0?`<div class="stat-card red"><div class="stat-label">Débito</div><div class="stat-val red">${toHHMM(tots.debitoAtual)}</div></div>`:`<div class="stat-card"><div class="stat-label">Dias trabalhados</div><div class="stat-val muted">${tots.diasTrab}</div></div>`}
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="btn-add" style="flex:1;background:#1e3a5f;border-color:#1d4ed8;color:#93c5fd" onclick="exportarPDFCiclo('${nomeCiclo}',cicloAtual.dias,cicloAtual.saldoInicial)">📄 Relatório PDF</button>
+        <button class="btn-add" style="flex:1;background:#2a2a2a;border-color:#404040;color:#e5e5e5" onclick="exportarCSVCiclo('${nomeCiclo}',cicloAtual.dias,cicloAtual.saldoInicial)">📊 Excel/CSV</button>
+      </div>
+
+      <div class="form-card">
+        <div class="form-title" id="form-title-registro">${editandoId?"✏️ Editar Dia":"Lançar Dia"}</div>
+        <div class="form-grid">
+          <div><label>Data</label><input type="date" id="inp-data"></div>
+          <div><label>Entrada</label><input type="time" id="inp-entrada"></div>
+          <div><label>Saída</label><input type="time" id="inp-saida"></div>
+        </div>
+        <div class="form-group"><label>Observação</label><input type="text" id="inp-obs" class="obs" placeholder="opcional..."></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-add" id="btn-add-registro" onclick="salvarDia()" style="flex:1">${editandoId?"Salvar Edição":"+ Adicionar"}</button>
+          <button class="btn-cancel" id="btn-cancel-registro" onclick="cancelarEdicaoRegistro()" style="${editandoId?"":"display:none"}">Cancelar</button>
+        </div>
+      </div>
+
+      <div class="list-header">Lançamentos (${diasCalc.length})</div>
+      <div class="view-toggle">
+        <button class="view-toggle-btn${viewLancamentos==="lista"?" active":""}" onclick="setViewLancamentos('lista')">📋 Lista</button>
+        <button class="view-toggle-btn${viewLancamentos==="calendario"?" active":""}" onclick="setViewLancamentos('calendario')">📅 Calendário</button>
+      </div>
+      ${viewLancamentos==="calendario"?renderCalendario(diasCalc):(diasCalc.length===0?'<div class="empty">Nenhum dia lançado ainda.</div>':listaDias)}
+    </div>`;
+
+  // Se está editando, repreenche o formulário (o render acima recriou os inputs vazios)
+  if(editandoId){
+    const dia=cicloAtual.dias.find(d=>d.id===editandoId);
+    if(dia){
+      document.getElementById("inp-data").value=dia.data;
+      document.getElementById("inp-entrada").value=dia.entrada||"";
+      document.getElementById("inp-saida").value=dia.saida||"";
+      document.getElementById("inp-obs").value=dia.obs||"";
+    }
+  }
+}
+
+let editandoId=null;
+
+function editarDiaAtual(id){
+  editandoId=id;
+  renderRegistro();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function cancelarEdicaoRegistro(){
+  editandoId=null;
+  renderRegistro();
+}
+
+function salvarDia(){
+  const data=document.getElementById("inp-data").value;
+  if(!data)return;
+  const entrada=document.getElementById("inp-entrada").value;
+  const saida=document.getElementById("inp-saida").value;
+  const obs=document.getElementById("inp-obs").value;
+
+  if(editandoId){
+    // Edição: atualiza o dia existente, removendo qualquer outro dia que já tivesse essa data
+    cicloAtual.dias=cicloAtual.dias.filter(d=>d.id===editandoId||d.data!==data);
+    const dia=cicloAtual.dias.find(d=>d.id===editandoId);
+    if(dia){dia.data=data;dia.entrada=entrada;dia.saida=saida;dia.obs=obs;}
+    editandoId=null;
+  } else {
+    const novo={id:Date.now(),data,entrada,saida,obs};
+    // Verifica se é dia 21 → fecha ciclo anterior
+    verificarFechamentoCiclo(novo);
+    // Remove duplicata da mesma data no ciclo atual
+    cicloAtual.dias=cicloAtual.dias.filter(d=>d.data!==data);
+    cicloAtual.dias.push(novo);
+  }
+  salvarTudo();
+  renderRegistro();
+}
+
+function removerDiaAtual(id){
+  cicloAtual.dias=cicloAtual.dias.filter(d=>d.id!==id);
+  if(editandoId===id)editandoId=null;
+  salvarTudo();
+  renderRegistro();
+}
+
+// ── PAGINA HISTORICO ───────────────────────────────────────────────
+function renderHistorico(){
+  const nomes=Object.keys(ciclos).reverse();
+  let html=`<div class="content">`;
+
+  if(nomes.length===0){
+    html+=`<div class="empty">Nenhum ciclo fechado ainda.<br><span style="font-size:11px">O histórico aparece aqui quando um ciclo é encerrado no dia 21.</span></div>`;
+  } else {
+    // Dashboard: comparativo
+    html+=`<div style="font-size:10px;color:#737373;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Comparativo Mensal</div>`;
+    nomes.slice().reverse().forEach(nome=>{
+      const c=ciclos[nome];
+      const dc=calcTodos(c.dias,c.saldoInicial);
+      const t=totalsCiclo(dc);
+      html+=`<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:12px;font-weight:700;color:#e5e5e5">${nome}</span>
+          <span style="font-size:12px;font-weight:700;color:#fcd34d;font-family:monospace">${brl(t.totalEst)}</span>
+        </div>
+        ${compBar(params.salarioBase,t.totalHE,t.totalNot,t.totalAjuda)}
+      </div>`;
+    });
+
+    html+=`<div class="divider"></div>`;
+    html+=`<div style="font-size:10px;color:#737373;text-transform:uppercase;letter-spacing:0.08em;margin:12px 0 8px">Ciclos Fechados</div>`;
+
+    nomes.forEach(nome=>{
+      const c=ciclos[nome];
+      const dc=calcTodos(c.dias,c.saldoInicial);
+      const t=totalsCiclo(dc);
+      html+=`
+        <div class="hist-mes">
+          <div class="hist-mes-header" onclick="toggleMes('${nome}')">
+            <span class="hist-mes-nome">${nome}</span>
+            <span class="hist-mes-total">${brl(t.totalEst)}</span>
+          </div>
+          <div class="hist-mes-body" id="hist-${nome.replace("/","-")}">
+            ${compBar(params.salarioBase,t.totalHE,t.totalNot,t.totalAjuda)}
+            <div class="hist-stats">
+              <div class="hist-stat"><div class="hist-stat-label">HE</div><div class="hist-stat-val" style="color:#86efac">${brl(t.totalHE)}</div></div>
+              ${params.temAdicionalNoturno?`<div class="hist-stat"><div class="hist-stat-label">Noturno</div><div class="hist-stat-val" style="color:#67e8f9">${brl(t.totalNot)}</div></div>`:""}
+              <div class="hist-stat"><div class="hist-stat-label">Ajuda</div><div class="hist-stat-val" style="color:#fcd34d">${brl(t.totalAjuda)}</div></div>
+              <div class="hist-stat"><div class="hist-stat-label">Dias</div><div class="hist-stat-val" style="color:#737373">${t.diasTrab}</div></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <button class="btn-add" style="flex:1;padding:9px 0;font-size:12px;background:#1e3a5f;border-color:#1d4ed8;color:#93c5fd" onclick="exportarPDFCiclo('${nome}',ciclos['${nome}'].dias,ciclos['${nome}'].saldoInicial)">📄 PDF</button>
+              <button class="btn-add" style="flex:1;padding:9px 0;font-size:12px;background:#2a2a2a;border-color:#404040;color:#e5e5e5" onclick="exportarCSVCiclo('${nome}',ciclos['${nome}'].dias,ciclos['${nome}'].saldoInicial)">📊 CSV</button>
+            </div>
+            <button class="hist-edit-btn" onclick="abrirModal('${nome}')">✏️ Ver / Editar Lançamentos</button>
+          </div>
+        </div>`;
+    });
+  }
+
+  html+=`</div>`;
+  document.getElementById("pg-historico").innerHTML=html;
+}
+
+function toggleMes(nome){
+  const el=document.getElementById("hist-"+nome.replace("/","-"));
+  if(el)el.classList.toggle("open");
+}
+
+// ── MODAL EDITAR MES ───────────────────────────────────────────────
+let modalNome="";
+
+function abrirModal(nome){
+  modalNome=nome;
+  editandoIdModal=null;
+  document.getElementById("modal-title").textContent="Editar — "+nome;
+  renderModal();
+  document.getElementById("modal-overlay").classList.add("open");
+}
+
+function fecharModal(){
+  document.getElementById("modal-overlay").classList.remove("open");
+  modalNome="";
+  editandoIdModal=null;
+  renderHistorico();
+}
+
+let editandoIdModal=null;
+
+function renderModal(){
+  const c=ciclos[modalNome];
+  if(!c)return;
+  const dc=calcTodos(c.dias,c.saldoInicial);
+  const listaDias=[...dc].reverse().map(d=>renderDiaCard(d,"removerDiaMes","editarDiaMes",editandoIdModal)).join("");
+  document.getElementById("modal-body").innerHTML=`
+    <div class="form-card">
+      <div class="form-title" id="form-title-modal">${editandoIdModal?"✏️ Editar Dia":"Adicionar / Substituir Dia"}</div>
+      <div class="form-grid">
+        <div><label>Data</label><input type="date" id="modal-data"></div>
+        <div><label>Entrada</label><input type="time" id="modal-entrada"></div>
+        <div><label>Saída</label><input type="time" id="modal-saida"></div>
+      </div>
+      <div class="form-group"><label>Obs.</label><input type="text" id="modal-obs" class="obs" placeholder="opcional..."></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-add" id="btn-add-modal" onclick="salvarDiaMes()" style="flex:1">${editandoIdModal?"Salvar Edição":"+ Adicionar"}</button>
+        <button class="btn-cancel" id="btn-cancel-modal" onclick="cancelarEdicaoModal()" style="${editandoIdModal?"":"display:none"}">Cancelar</button>
+      </div>
+    </div>
+    <div style="font-size:10px;color:#737373;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Lançamentos</div>
+    ${listaDias}`;
+
+  if(editandoIdModal){
+    const dia=c.dias.find(d=>d.id===editandoIdModal);
+    if(dia){
+      document.getElementById("modal-data").value=dia.data;
+      document.getElementById("modal-entrada").value=dia.entrada||"";
+      document.getElementById("modal-saida").value=dia.saida||"";
+      document.getElementById("modal-obs").value=dia.obs||"";
+    }
+  }
+}
+
+function editarDiaMes(id){
+  editandoIdModal=id;
+  renderModal();
+}
+
+function cancelarEdicaoModal(){
+  editandoIdModal=null;
+  renderModal();
+}
+
+function salvarDiaMes(){
+  const data=document.getElementById("modal-data").value;
+  if(!data||!ciclos[modalNome])return;
+  const entrada=document.getElementById("modal-entrada").value;
+  const saida=document.getElementById("modal-saida").value;
+  const obs=document.getElementById("modal-obs").value;
+  const c=ciclos[modalNome];
+
+  if(editandoIdModal){
+    c.dias=c.dias.filter(d=>d.id===editandoIdModal||d.data!==data);
+    const dia=c.dias.find(d=>d.id===editandoIdModal);
+    if(dia){dia.data=data;dia.entrada=entrada;dia.saida=saida;dia.obs=obs;}
+    editandoIdModal=null;
+  } else {
+    const novo={id:Date.now(),data,entrada,saida,obs};
+    c.dias=c.dias.filter(d=>d.data!==data);
+    c.dias.push(novo);
+  }
+  salvarTudo();
+  renderModal();
+}
+
+function removerDiaMes(id){
+  if(!ciclos[modalNome])return;
+  ciclos[modalNome].dias=ciclos[modalNome].dias.filter(d=>d.id!==id);
+  if(editandoIdModal===id)editandoIdModal=null;
+  salvarTudo();
+  renderModal();
+}
+
+// ── PAGINA PARAMETROS ──────────────────────────────────────────────
+function renderParametros(){
+  const hv=params.salarioBase/params.jornadaMensal;
+  let ultimoBackup="";
+  try{
+    const ub=localStorage.getItem("mosb_ultimo_backup");
+    if(ub){
+      const d=new Date(ub);
+      ultimoBackup=`Último backup: ${d.toLocaleDateString("pt-BR")} às ${d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}`;
+    }
+  }catch(e){}
+  document.getElementById("pg-parametros").innerHTML=`
+    <div class="content">
+      <div class="param-section" style="background:#1a1a1a;border-color:#2a2a2a">
+        <div class="form-title" style="margin-bottom:10px">Backup</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-add" style="flex:1;background:#1e3a5f;border-color:#1d4ed8;color:#93c5fd" onclick="exportarBackup()">⬇️ Exportar</button>
+          <button class="btn-add" style="flex:1;background:#2a2a2a;border-color:#404040;color:#e5e5e5" onclick="document.getElementById('backup-input').click()">⬆️ Importar</button>
+        </div>
+        <div class="param-note">${ultimoBackup||"Nenhum backup exportado ainda."}<br>Exporte periodicamente — os dados só existem neste navegador/celular. Importar substitui tudo (ciclos, parâmetros e foto).</div>
+      </div>
+      <div class="param-section" style="background:#1a1a1a;border-color:#2a2a2a">
+        <div class="form-title" style="margin-bottom:10px">Perfil</div>
+        <div class="perfil-row">
+          <div class="avatar-lg" onclick="document.getElementById('foto-input').click()">
+            <img id="avatar-img-perfil" style="display:none">
+            <span id="avatar-fallback-perfil">A</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:0">
+            <input type="text" id="p-nome" class="param-input" placeholder="Seu nome" style="font-size:13px;font-weight:700;padding:6px 8px" value="${params.perfilNome||""}" oninput="salvarParams()">
+            <input type="text" id="p-cargo" class="param-input" placeholder="Seu cargo / função" style="font-size:11px;padding:6px 8px" value="${params.perfilCargo||""}" oninput="salvarParams()">
+            <div style="display:flex;gap:12px;margin-top:2px">
+              <button class="link-btn" onclick="document.getElementById('foto-input').click()">Trocar foto</button>
+              <button class="link-btn danger" onclick="removerFoto()">Remover</button>
+            </div>
+          </div>
+        </div>
+        <div class="param-note">Nome, cargo e foto aparecem no cabeçalho e nos relatórios em PDF. Se for compartilhar o app com alguém, cada pessoa pode personalizar aqui com os próprios dados.</div>
+      </div>
+      <div class="param-section">
+        <label style="color:#93c5fd">Saldo Inicial do Ciclo (h)</label>
+        <input type="number" step="0.25" id="p-saldo" class="saldo-input" value="${cicloAtual.saldoInicial}" oninput="salvarSaldo()">
+        <div class="param-note">Atualizado automaticamente ao fechar o ciclo. Ajuste manual se necessário.<br>Negativo = débito herdado (ex: -1.75 = deve 1h45)</div>
+      </div>
+      ${[["Salário Base (R$)","p-salario","number","0.01",params.salarioBase],["Banco de Horas (h)","p-banco","number","1",params.bancoHoras],["Ajuda de Custo (R$/dia)","p-ajuda","number","0.01",params.ajudaCusto],["Tolerância Ponto (min)","p-tol","number","1",params.toleranciaMin]].map(([l,id,t,s,v])=>`<div class="form-group"><label>${l}</label><input type="${t}" step="${s}" id="${id}" class="param-input" value="${v}" oninput="salvarParams()"></div>`).join("")}
+      ${[["Entrada (seg-sex)","p-ent-du","time",params.entradaDU],["Saída (seg-sex)","p-sai-du","time",params.saidaDU],["Entrada (sábado)","p-ent-sab","time",params.entradaSAB],["Saída (sábado)","p-sai-sab","time",params.saidaSAB]].map(([l,id,t,v])=>`<div class="form-group"><label>${l}</label><input type="${t}" id="${id}" class="param-input" value="${v}" oninput="salvarParams()"></div>`).join("")}
+      <div class="param-section" style="background:#1a1a1a;border-color:#2a2a2a">
+        <div class="form-title" style="margin-bottom:8px">Tipo de Turno</div>
+        <div class="form-group">
+          <label>Adicional noturno</label>
+          <select id="p-tem-noturno" class="param-input" onchange="salvarParams()">
+            <option value="1" ${params.temAdicionalNoturno?"selected":""}>Este turno tem adicional noturno (trabalha após 22h)</option>
+            <option value="0" ${!params.temAdicionalNoturno?"selected":""}>Turno diurno — sem adicional noturno</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Descanso mínimo entre turnos (h)</label>
+          <input type="number" step="0.5" id="p-descanso-min" class="param-input" value="${(params.descansoMinimoMin/60).toFixed(1)}" oninput="salvarParams()">
+        </div>
+        <div class="param-note">Se desativar o adicional noturno, o app não calcula esse valor nem exige nada sobre virada de turno — cada lançamento usa exatamente o horário de entrada e saída que você digitar.<br>O campo de descanso mínimo (padrão 11h, conforme a CLT) só gera um alerta visual no dia seguinte quando o intervalo entre turnos fica curto — não bloqueia o lançamento.</div>
+      </div>
+      <div class="param-section" style="background:#1a1a1a;border-color:#2a2a2a">
+        <div class="form-title" style="margin-bottom:8px">Percentuais (CCT)</div>
+        ${[["Adicional Noturno (%)","p-pct-not","adicionalNoturno"],["HE Útil / Sábado (%)","p-pct-he","heUtil"],["HE Domingo/Feriado (%)","p-pct-hedom","heDomingo"]].map(([l,id,k])=>`<div class="form-group"><label>${l}</label><input type="number" step="1" id="${id}" class="param-input" value="${(params[k]*100).toFixed(0)}" oninput="salvarParams()"></div>`).join("")}
+        <div class="param-note">Se a convenção coletiva (Metalúrgicos Capivari) mudar esses percentuais em dissídio, atualize aqui — sem precisar editar código.</div>
+      </div>
+      <div class="param-section" style="background:#1a1a1a;border-color:#2a2a2a">
+        <div class="form-title" style="margin-bottom:8px">Detecção Automática de Sábado</div>
+        <div class="form-group">
+          <label>Um sábado que você tem certeza que é "da escala" (trabalho normal)</label>
+          <input type="date" id="p-sab-ref" class="param-input" value="${params.sabadoReferencia}" oninput="salvarParams()">
+        </div>
+        ${!params.sabadoReferencia?'<div class="param-note">Sem referência configurada: todo sábado é tratado como escala normal (comportamento atual). Configure para ativar a detecção automática.</div>':(!isSab(params.sabadoReferencia)?'<div class="param-note" style="color:#fca5a5">⚠ A data escolhida não é um sábado. Corrija para a detecção funcionar corretamente.</div>':renderPreviewSabados())}
+      </div>
+      <div class="calc-box">
+        <div style="font-size:10px;color:#737373;text-transform:uppercase;margin-bottom:8px">Valores Calculados</div>
+        ${[["Hora Normal","R$ "+hv.toFixed(4)],["Hora Noturna","R$ "+(hv*(1+params.adicionalNoturno)).toFixed(4)],["HE 50%","R$ "+(hv*(1+params.heUtil)).toFixed(4)],["HE 100%","R$ "+(hv*(1+params.heDomingo)).toFixed(4)]].map(([l,v])=>`<div class="calc-row"><span class="calc-label">${l}</span><span class="calc-val">${v}</span></div>`).join("")}
+      </div>
+      <div class="param-note" style="text-align:center;margin-top:4px">Versão do app: <span id="app-version">carregando...</span></div>
+    </div>`;
+  atualizarVersaoExibida();
+}
+
+function renderPreviewSabados(){
+  const hoje=new Date();
+  // Encontra o próximo sábado a partir de hoje (ou hoje, se já for sábado)
+  const d=new Date(hoje);
+  d.setDate(d.getDate()+((6-d.getDay()+7)%7));
+  let linhas="";
+  for(let i=0;i<6;i++){
+    const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),dd=String(d.getDate()).padStart(2,"0");
+    const dataStr=`${y}-${m}-${dd}`;
+    const escala=isSabadoEscala(dataStr);
+    linhas+=`<div class="calc-row"><span class="calc-label">${dataStr.split("-").reverse().join("/")}</span><span class="calc-val" style="color:${escala?"#86efac":"#fca5a5"}">${escala?"Escala (normal)":"Fora da escala (100%)"}</span></div>`;
+    d.setDate(d.getDate()+7);
+  }
+  return `<div class="calc-box"><div style="font-size:10px;color:#737373;text-transform:uppercase;margin-bottom:8px">Próximos Sábados Detectados</div>${linhas}</div>`;
+}
+
+function salvarSaldo(){
+  cicloAtual.saldoInicial=parseFloat(document.getElementById("p-saldo").value)||0;
+  salvarTudo();
+  renderRegistro();
+}
+
+function salvarParams(){
+  params.perfilNome=document.getElementById("p-nome").value||"";
+  params.perfilCargo=document.getElementById("p-cargo").value||"";
+  params.salarioBase=parseFloat(document.getElementById("p-salario").value)||2903;
+  params.bancoHoras=parseFloat(document.getElementById("p-banco").value)||18;
+  params.ajudaCusto=parseFloat(document.getElementById("p-ajuda").value)||50.21;
+  params.toleranciaMin=parseInt(document.getElementById("p-tol").value)||5;
+  params.entradaDU=document.getElementById("p-ent-du").value||"14:40";
+  params.saidaDU=document.getElementById("p-sai-du").value||"23:28";
+  params.entradaSAB=document.getElementById("p-ent-sab").value||"10:40";
+  params.saidaSAB=document.getElementById("p-sai-sab").value||"19:40";
+  params.sabadoReferencia=document.getElementById("p-sab-ref").value||"";
+  params.temAdicionalNoturno=document.getElementById("p-tem-noturno").value==="1";
+  params.descansoMinimoMin=(parseFloat(document.getElementById("p-descanso-min").value)||11)*60;
+  params.adicionalNoturno=(parseFloat(document.getElementById("p-pct-not").value)||0)/100;
+  params.heUtil=(parseFloat(document.getElementById("p-pct-he").value)||0)/100;
+  params.heDomingo=(parseFloat(document.getElementById("p-pct-hedom").value)||0)/100;
+  salvarTudo();
+  atualizarPerfilUI();
+  renderParametros();
+  renderRegistro();
+}
+
+// ── FOTO DE PERFIL ─────────────────────────────────────────────────
+function handleFotoChange(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const img=new Image();
+    img.onload=function(){
+      const size=200;
+      const canvas=document.createElement("canvas");
+      canvas.width=size;canvas.height=size;
+      const ctx=canvas.getContext("2d");
+      const scale=Math.max(size/img.width,size/img.height);
+      const w=img.width*scale,h=img.height*scale;
+      ctx.drawImage(img,(size-w)/2,(size-h)/2,w,h);
+      const dataUrl=canvas.toDataURL("image/jpeg",0.85);
+      try{
+        localStorage.setItem("mosb_foto",dataUrl);
+      }catch(err){
+        alert("Não foi possível salvar a foto (armazenamento cheio).");
+        return;
+      }
+      aplicarFoto(dataUrl);
+      if(paginaAtual==="parametros")renderParametros();
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+  document.getElementById("foto-input").value="";
+}
+
+function atualizarPerfilUI(){
+  const nome=(params.perfilNome||"").trim();
+  const cargo=(params.perfilCargo||"").trim();
+  const subEl=document.getElementById("header-sub-text");
+  if(subEl)subEl.textContent=[nome,cargo].filter(Boolean).join(" · ")||"Configure seu perfil em Parâmetros";
+  const inicial=nome?nome.charAt(0).toUpperCase():"?";
+  ["avatar-fallback-header","avatar-fallback-perfil"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.textContent=inicial;
+  });
+}
+
+function aplicarFoto(dataUrl){
+  [["avatar-img-header","avatar-fallback-header"],["avatar-img-perfil","avatar-fallback-perfil"]].forEach(([imgId,fbId])=>{
+    const imgEl=document.getElementById(imgId),fbEl=document.getElementById(fbId);
+    if(!imgEl)return;
+    if(dataUrl){imgEl.src=dataUrl;imgEl.style.display="block";if(fbEl)fbEl.style.display="none";}
+    else{imgEl.style.display="none";if(fbEl)fbEl.style.display="block";}
+  });
+}
+
+function carregarFoto(){
+  try{
+    const foto=localStorage.getItem("mosb_foto");
+    if(foto)aplicarFoto(foto);
+  }catch(e){}
+}
+
+function removerFoto(){
+  if(!confirm("Remover foto de perfil?"))return;
+  try{localStorage.removeItem("mosb_foto");}catch(e){}
+  aplicarFoto(null);
+  if(paginaAtual==="parametros")renderParametros();
+}
+
+// ── RELATORIOS (CSV / PDF) ────────────────────────────────────────
+function periodoDeDias(dias){
+  const datas=[...dias].filter(d=>d.data).map(d=>d.data).sort();
+  if(datas.length===0)return "";
+  return `${datas[0].split("-").reverse().join("/")} → ${datas[datas.length-1].split("-").reverse().join("/")}`;
+}
+
+function montarRelatorio(nome,dias,saldoInicial){
+  const diasCalc=calcTodos(dias,saldoInicial);
+  const tots=totalsCiclo(diasCalc);
+  const periodo=periodoDeDias(dias);
+  return{nome,periodo,diasCalc,tots};
+}
+
+function linhaRelatorio(d){
+  const heMin=(d.he50Min||0)+(d.heDomMin||0);
+  return{
+    data:d.data.split("-").reverse().join("/"),
+    dia:diaSem(d.data),
+    entrada:d.entrada||"--",
+    saida:d.saida||"--",
+    trab:d.calc?toHHMM(d.calc.totalMin):"--",
+    dif:(d.calc&&d.calc.difMin)?(d.calc.difMin>0?"+":"")+toHHMM(Math.abs(d.calc.difMin)):"--",
+    banco:(d.saldoMin>0)?toHHMM(d.saldoMin):"--",
+    debito:(d.debitoMin>0)?toHHMM(d.debitoMin):"--",
+    heH:heMin>0?toHHMM(heMin):"--",
+    heV:d.valHE>0?brl(d.valHE):"--",
+    notH:(d.calc&&d.calc.notMin>0)?toHHMM(d.calc.notMin):"--",
+    notV:d.valNot>0?brl(d.valNot):"--",
+    obs:d.obs||""
+  };
+}
+
+function exportarCSVCiclo(nome,dias,saldoInicial){
+  const{periodo,diasCalc,tots}=montarRelatorio(nome,dias,saldoInicial);
+  const header=["Data","Dia","Entrada","Saída","Horas Trab.","Diferença","Banco Acum.","Débito","HE (h)","HE (R$)","Noturno (h)","Noturno (R$)","Observação"];
+  const esc=v=>`"${String(v).replace(/"/g,'""')}"`;
+  let csv=header.map(esc).join(";")+"\n";
+  diasCalc.map(linhaRelatorio).forEach(l=>{
+    csv+=[l.data,l.dia,l.entrada,l.saida,l.trab,l.dif,l.banco,l.debito,l.heH,l.heV,l.notH,l.notV,l.obs].map(esc).join(";")+"\n";
+  });
+  csv+="\n";
+  [["Nome",params.perfilNome||"--"],["Cargo",params.perfilCargo||"--"],["Ciclo",nome],["Período",periodo],["Salário Base",brl(params.salarioBase)],["Ajuda de Custo",brl(tots.totalAjuda)],
+   ["Total HE",brl(tots.totalHE)],["Total Noturno",brl(tots.totalNot)],["TOTAL ESTIMADO",brl(tots.totalEst)],
+   ["Dias Trabalhados",tots.diasTrab],["Saldo Banco Final",toHHMM(tots.saldoAtual)],
+   ["Débito Final",tots.debitoAtual>0?toHHMM(tots.debitoAtual):"--"]
+  ].forEach(([l,v])=>{csv+=[l,v].map(esc).join(";")+"\n";});
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=`MOSB_Relatorio_${nome.replace("/","-")}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportarPDFCiclo(nome,dias,saldoInicial){
+  const{periodo,diasCalc,tots}=montarRelatorio(nome,dias,saldoInicial);
+  const linhasHtml=diasCalc.map(linhaRelatorio).map(l=>`
+    <tr><td>${l.data}</td><td>${l.dia}</td><td>${l.entrada}</td><td>${l.saida}</td>
+    <td>${l.trab}</td><td>${l.dif}</td><td>${l.banco}</td><td>${l.debito}</td>
+    <td>${l.heH}</td><td>${l.heV}</td><td>${l.notH}</td><td>${l.notV}</td><td>${l.obs}</td></tr>`).join("");
+  const agora=new Date().toLocaleString("pt-BR");
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>MOSB - Relatório ${nome}</title>
+    <style>
+      *{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+      body{padding:24px;color:#111}
+      h1{font-size:18px;margin:0 0 2px}
+      .sub{font-size:12px;color:#555;margin-bottom:16px}
+      table{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:20px}
+      th,td{border:1px solid #ccc;padding:4px 6px;text-align:left;white-space:nowrap}
+      th{background:#eee}
+      .totais{width:340px;margin-top:6px}
+      .totais td{border:none;padding:3px 6px;font-size:12px}
+      .totais tr:last-child td{font-weight:bold;border-top:2px solid #111;font-size:13px}
+      .footer{margin-top:24px;font-size:9px;color:#888}
+    </style></head><body>
+      <h1>MOSB · Relatório de Horas</h1>
+      <div class="sub">${[params.perfilNome,params.perfilCargo].filter(Boolean).join(" · ")||"Ciclo"} — Ciclo ${nome} (${periodo})</div>
+      <table><thead><tr>
+        <th>Data</th><th>Dia</th><th>Entr.</th><th>Saída</th><th>Trab.</th><th>Dif.</th>
+        <th>Banco</th><th>Débito</th><th>HE(h)</th><th>HE(R$)</th><th>Not.(h)</th><th>Not.(R$)</th><th>Obs.</th>
+      </tr></thead><tbody>${linhasHtml}</tbody></table>
+      <table class="totais">
+        <tr><td>Salário Base</td><td>${brl(params.salarioBase)}</td></tr>
+        <tr><td>Ajuda de Custo</td><td>${brl(tots.totalAjuda)}</td></tr>
+        <tr><td>Total HE</td><td>${brl(tots.totalHE)}</td></tr>
+        <tr><td>Total Noturno</td><td>${brl(tots.totalNot)}</td></tr>
+        <tr><td>Dias Trabalhados</td><td>${tots.diasTrab}</td></tr>
+        <tr><td>Saldo Banco Final</td><td>${toHHMM(tots.saldoAtual)}</td></tr>
+        ${tots.debitoAtual>0?`<tr><td>Débito Final</td><td>${toHHMM(tots.debitoAtual)}</td></tr>`:""}
+        <tr><td>TOTAL ESTIMADO</td><td>${brl(tots.totalEst)}</td></tr>
+      </table>
+      <div class="footer">Gerado em ${agora} · MOSB_Horas (controle pessoal, não substitui holerite oficial)</div>
+      <script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script>
+    </body></html>`;
+  const win=window.open("","_blank");
+  if(!win){
+    alert("Não foi possível abrir a janela de impressão. Verifique se o navegador está bloqueando pop-ups.");
+    return;
+  }
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}
+
+// ── BACKUP (EXPORTAR / IMPORTAR) ──────────────────────────────────
+function exportarBackup(){
+  let foto=null;
+  try{foto=localStorage.getItem("mosb_foto");}catch(e){}
+  const backup={
+    versao:1,
+    exportadoEm:new Date().toISOString(),
+    params,
+    cicloAtual,
+    ciclos,
+    foto
+  };
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  const dataStr=new Date().toISOString().slice(0,10);
+  a.href=url;
+  a.download=`MOSB_Horas_backup_${dataStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  try{localStorage.setItem("mosb_ultimo_backup",new Date().toISOString());}catch(e){}
+  if(paginaAtual==="parametros")renderParametros();
+}
+
+function importarBackupChange(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    let backup;
+    try{
+      backup=JSON.parse(e.target.result);
+    }catch(err){
+      alert("Arquivo inválido. Não foi possível ler o backup.");
+      return;
+    }
+    if(!backup||typeof backup!=="object"||!backup.params||!backup.cicloAtual){
+      alert("Este arquivo não parece ser um backup válido do MOSB Horas.");
+      return;
+    }
+    if(!confirm("Isso vai SUBSTITUIR todos os dados atuais (ciclos, parâmetros e foto) pelos dados deste backup. Essa ação não pode ser desfeita. Continuar?")){
+      return;
+    }
+    params={...params,...backup.params};
+    cicloAtual=backup.cicloAtual;
+    ciclos=backup.ciclos||{};
+    editandoId=null;
+    editandoIdModal=null;
+    if(backup.foto){
+      try{localStorage.setItem("mosb_foto",backup.foto);}catch(err){}
+    }
+    salvarTudo();
+    aplicarFoto(backup.foto||null);
+    atualizarPerfilUI();
+    renderParametros();
+    if(paginaAtual==="registro")renderRegistro();
+    if(paginaAtual==="historico")renderHistorico();
+    alert("Backup importado com sucesso!");
+  };
+  reader.readAsText(file);
+  document.getElementById("backup-input").value="";
+}
+
+// ── NAVEGACAO ──────────────────────────────────────────────────────
+let paginaAtual="registro";
+function setPage(pg){
+  ["registro","historico","parametros"].forEach(p=>{
+    document.getElementById("pg-"+p).style.display=p===pg?"block":"none";
+    document.getElementById("nav-"+p).className="nav-btn"+(p===pg?" active":"");
+  });
+  paginaAtual=pg;
+  if(pg==="registro")renderRegistro();
+  else if(pg==="historico")renderHistorico();
+  else if(pg==="parametros")renderParametros();
+}
+
+// ── PWA: INSTALAÇÃO (Android/Chrome) ───────────────────────────────
+let deferredPrompt=null;
+
+window.addEventListener("beforeinstallprompt",(e)=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  let dispensado=false;
+  try{dispensado=localStorage.getItem("mosb_install_dismissed")==="1";}catch(err){}
+  const jaInstalado=window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true;
+  if(!dispensado && !jaInstalado){
+    document.getElementById("install-banner").classList.add("show");
+  }
+});
+
+function instalarApp(){
+  document.getElementById("install-banner").classList.remove("show");
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.finally(()=>{deferredPrompt=null;});
+}
+
+function fecharInstallBanner(){
+  document.getElementById("install-banner").classList.remove("show");
+  try{localStorage.setItem("mosb_install_dismissed","1");}catch(e){}
+}
+
+window.addEventListener("appinstalled",()=>{
+  document.getElementById("install-banner").classList.remove("show");
+  deferredPrompt=null;
+});
+
+// ── PWA: ATUALIZAÇÃO DO SERVICE WORKER ─────────────────────────────
+let swRegistration=null;
+let swAguardando=null;
+
+function atualizarVersaoExibida(){
+  const el=document.getElementById("app-version");
+  if(!el)return;
+  if(!("serviceWorker" in navigator)){el.textContent="offline indisponível neste navegador";return;}
+  navigator.serviceWorker.getRegistration().then(reg=>{
+    el.textContent = reg ? "instalada e pronta para uso offline" : "carregando...";
+  }).catch(()=>{el.textContent="--";});
+}
+
+function atualizarApp(){
+  if(swAguardando){
+    swAguardando.postMessage("skipWaiting");
+  }
+  document.getElementById("update-banner").classList.remove("show");
+}
+
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").then((reg)=>{
+    swRegistration=reg;
+
+    // Já existe um worker esperando (ex: atualizou em outra aba)
+    if(reg.waiting){
+      swAguardando=reg.waiting;
+      document.getElementById("update-banner").classList.add("show");
+    }
+
+    reg.addEventListener("updatefound",()=>{
+      const novo=reg.installing;
+      if(!novo)return;
+      novo.addEventListener("statechange",()=>{
+        if(novo.state==="installed" && navigator.serviceWorker.controller){
+          swAguardando=novo;
+          document.getElementById("update-banner").classList.add("show");
+        }
+      });
+    });
+  }).catch(()=>{});
+
+  let recarregando=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    if(recarregando)return;
+    recarregando=true;
+    window.location.reload();
+  });
+}
+
+// ── INIT ───────────────────────────────────────────────────────────
+carregarStorage();
+setPage("registro");
+carregarFoto();
+atualizarPerfilUI();
+</script>
+</body>
+</html>
