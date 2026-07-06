@@ -1,0 +1,42 @@
+{
+  "name": "MOSB · Controle de Horas",
+  "short_name": "MOSB Horas",
+  "description": "Controle pessoal de jornada, banco de horas, horas extras e adicional noturno.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "mosb-horas",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#0f0f0f",
+  "theme_color": "#1a1a1a",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": ["productivity", "utilities", "business"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
